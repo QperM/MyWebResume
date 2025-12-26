@@ -11,9 +11,6 @@
 - 视频：/videos/
 - 文档：/documents/
 
-常用路径：
-- 首页头像：/images/profile.jpg
-- 作品 / 图库 / 游戏背景：按代码中的路径自行替换
 
 ## 🛠️ 主要技术
 - React 18  
