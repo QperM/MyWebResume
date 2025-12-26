@@ -231,6 +231,8 @@ function App() {
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const hasSwiped = useRef(false);
+  const touchStartY = useRef(null);
+  const touchEndY = useRef(null);
 
   const handleScroll = (href) => {
     const el = document.querySelector(href);
@@ -244,31 +246,58 @@ function App() {
   const onTouchStart = (e) => {
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
+    touchStartY.current = e.targetTouches[0].clientY;
+    touchEndY.current = null;
     hasSwiped.current = false;
   };
 
   const onTouchMove = (e) => {
     setTouchEnd(e.targetTouches[0].clientX);
+    touchEndY.current = e.targetTouches[0].clientY;
+    // 如果检测到明显的垂直滑动，不阻止默认行为（允许页面滚动）
+    if (touchStartY.current !== null) {
+      const deltaY = Math.abs(e.targetTouches[0].clientY - touchStartY.current);
+      const deltaX = Math.abs(e.targetTouches[0].clientX - (touchStart || 0));
+      // 如果垂直滑动距离明显大于水平滑动，允许默认滚动行为
+      if (deltaY > deltaX && deltaY > 10) {
+        return; // 不阻止默认行为，允许页面滚动
+      }
+      // 如果是水平滑动，阻止默认行为以避免页面滚动
+      if (deltaX > deltaY && deltaX > 10) {
+        e.preventDefault();
+      }
+    }
   };
 
   const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) {
+    if (!touchStart || !touchEnd || touchStartY.current === null || touchEndY.current === null) {
       hasSwiped.current = false;
+      touchStartY.current = null;
+      touchEndY.current = null;
       return;
     }
     
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
+    const deltaX = touchStart - touchEnd;
+    const deltaY = Math.abs(touchEndY.current - touchStartY.current);
+    
+    // 判断是水平滑动还是垂直滑动
+    // 如果垂直滑动距离大于水平滑动距离，或者垂直滑动距离超过阈值，则认为是垂直滑动
+    const isVerticalSwipe = deltaY > Math.abs(deltaX) && deltaY > 20;
+    const isHorizontalSwipe = Math.abs(deltaX) > deltaY && Math.abs(deltaX) > minSwipeDistance;
+    
+    if (isHorizontalSwipe && !isVerticalSwipe) {
+      const isLeftSwipe = deltaX > minSwipeDistance;
+      const isRightSwipe = deltaX < -minSwipeDistance;
 
-    if (isLeftSwipe) {
-      // 向左滑动，显示下一张
-      hasSwiped.current = true;
-      setGameIndex((idx) => (idx + 1) % games.length);
-    } else if (isRightSwipe) {
-      // 向右滑动，显示上一张
-      hasSwiped.current = true;
-      setGameIndex((idx) => (idx - 1 + games.length) % games.length);
+      if (isLeftSwipe) {
+        // 向左滑动，显示下一张
+        hasSwiped.current = true;
+        setGameIndex((idx) => (idx + 1) % games.length);
+      } else if (isRightSwipe) {
+        // 向右滑动，显示上一张
+        hasSwiped.current = true;
+        setGameIndex((idx) => (idx - 1 + games.length) % games.length);
+      }
     } else {
       hasSwiped.current = false;
     }
@@ -277,6 +306,8 @@ function App() {
     setTimeout(() => {
       setTouchStart(null);
       setTouchEnd(null);
+      touchStartY.current = null;
+      touchEndY.current = null;
       hasSwiped.current = false;
     }, 100);
   };
@@ -565,7 +596,7 @@ function App() {
                 </button>
               </div>
               <div 
-                className="relative h-[480px] overflow-hidden py-8 touch-none md:touch-auto"
+                className="relative h-[480px] overflow-hidden py-8"
                 onTouchStart={onTouchStart}
                 onTouchMove={onTouchMove}
                 onTouchEnd={onTouchEnd}
@@ -593,7 +624,7 @@ function App() {
                         setGameIndex(idx);
                       }}
                       key={`${game.title}-${idx}`}
-                      className="group absolute left-1/2 top-4 h-[420px] w-[320px] -translate-x-1/2 overflow-hidden rounded-3xl border border-slate-100 bg-white/90 p-6 shadow-2xl transition duration-300 focus:outline-none touch-none md:touch-auto"
+                      className="group absolute left-1/2 top-4 h-[420px] w-[320px] -translate-x-1/2 overflow-hidden rounded-3xl border border-slate-100 bg-white/90 p-6 shadow-2xl transition duration-300 focus:outline-none"
                       style={{
                         transform: `translate(calc(-50% + ${translateX}px), 0) rotate(${rotate}deg) scale(${scale})`,
                         zIndex,
