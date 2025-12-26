@@ -18,7 +18,9 @@
 ## 🛠️ 主要技术
 - React 18  
 - Tailwind CSS  
+- EmailJS（留言表单邮件发送）
 - 自定义轮播、渐变、玻璃拟态等 UI 效果  
+
 
 ## 📄 许可
 本项目使用 MIT License。

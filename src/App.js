@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import emailjs from '@emailjs/browser';
 
 const navItems = [
   { label: '首页', href: '#home' },
@@ -65,12 +66,36 @@ const experiences = [
 ];
 
 const skills = [
-  { name: 'C++', value: 90 },
-  { name: 'Unreal Engine / 蓝图', value: 86 },
-  { name: 'Python / 数据处理', value: 88 },
-  { name: '游戏与关卡设计', value: 84 },
-  { name: '计算机视觉 / ML', value: 80 },
-  { name: '前端（React）', value: 78 },
+  { 
+    name: 'C++', 
+    value: 90,
+    description: '在光蚀项目中用 C++ 实现了生命值系统以及基础的武器系统，方便后续使用蓝图创建子类快速迭代。'
+  },
+  { 
+    name: 'Unreal Engine / 蓝图', 
+    value: 86,
+    description: '熟练使用蓝图系统实现 AI 行为树、动画状态机与关卡逻辑，通过双层碰撞胶囊体解决穿模问题，提升游戏流畅度。通过蓝图暴露参数以实现设计平衡与快速迭代。'
+  },
+  { 
+    name: 'Python / 数据处理', 
+    value: 88,
+    description: '用 Python + Excel 自动化生成 200+ 份学习报告，具备数据分析与可视化能力，习惯用数据驱动迭代决策。'
+  },
+  { 
+    name: '游戏与关卡设计', 
+    value: 84,
+    description: '从玩家视角反推设计逻辑，关注 TTK、战斗节奏与数值平衡，曾凭借对机制的精准把控在 CFM 排位中跻身前 0.01%。'
+  },
+  { 
+    name: '计算机视觉 / ML', 
+    value: 80,
+    description: 'UNSW 课程涵盖神经网络、计算机视觉与机器学习，具备理论基础与实践经验，能结合游戏场景应用相关技术。'
+  },
+  { 
+    name: '前端（React）', 
+    value: 78,
+    description: '参与 CNS 教育平台前端升级，使用 React + Strapi 实现交互地图与 Q&A 论坛，熟悉组件化开发与状态管理。'
+  },
 ];
 
 const otherSkills = [
@@ -194,7 +219,7 @@ const contacts = [
 const infoCards = [
   { label: '姓名', value: '马君羽' },
   { label: '目标岗位', value: '技术型关卡设计实习生' },
-  { label: '毕业时间', value: '预计 2026 年 01 月 29 日' },
+  { label: '毕业时间', value: '2026 年 01 月 29 日' },
   { label: '技术标签', value: 'C++ / UE5 / 蓝图 / React / 数据分析' },
 ];
 
@@ -202,11 +227,53 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [lightbox, setLightbox] = useState({ open: false, src: '', type: 'image', title: '' });
   const [gameIndex, setGameIndex] = useState(() => Math.floor(games.length / 2));
+  const [formStatus, setFormStatus] = useState({ type: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleScroll = (href) => {
     const el = document.querySelector(href);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setMenuOpen(false);
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setFormStatus({ type: '', message: '' });
+
+
+    const templateParams = {
+      from_name: e.target.name.value,
+      from_email: e.target.email.value,
+      message: e.target.message.value,
+      reply_to: e.target.email.value, 
+    };
+
+    try {
+      const response = await emailjs.send(
+        process.env.REACT_APP_EMAILJS_SERVICE_ID || 'service_c0s6wjo',
+        process.env.REACT_APP_EMAILJS_TEMPLATE_ID || 'template_stan71c',
+        templateParams,
+        process.env.REACT_APP_EMAILJS_PUBLIC_KEY || '11oS_enHDgk3u1Rrc'
+      );
+
+      console.log('EmailJS 响应:', response);
+      setFormStatus({ 
+        type: 'success', 
+        message: '留言已发送！我会尽快回复您。' 
+      });
+      e.target.reset();
+    } catch (error) {
+      console.error('发送失败详情:', error);
+      console.error('错误代码:', error.code);
+      console.error('错误消息:', error.text);
+      setFormStatus({ 
+        type: 'error', 
+        message: `发送失败：${error.text || error.message}。请直接发邮件至 junyu.ma.resume@outlook.com` 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const skillLevels = useMemo(
@@ -551,16 +618,9 @@ function App() {
                           borderRadius: idx % 3 === 0 ? '40px 28px 32px 36px' : undefined,
                         }}
                       >
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-xs font-semibold text-white shadow-sm">
-                            {idx + 1}
-                          </span>
-                          <p className="text-base font-semibold">{skill.name}</p>
-                        </div>
+                        <p className="text-base font-semibold">{skill.name}</p>
                         <p className={`${isGradient ? 'text-white/85' : 'text-slate-600'} mt-2 text-sm leading-6`}>
-                          {skill.value >= 85
-                            ? '项目里反复使用，能拆解需求、封装模块并带迭代方案。'
-                            : '有交付经验，能独立推进并快速补强相关知识点。'}
+                          {skill.description}
                         </p>
                       </div>
                     </div>
@@ -715,14 +775,18 @@ function App() {
             </div>
             <div className="glass rounded-2xl p-6 shadow-xl">
               <h3 className="text-lg font-semibold text-slate-900">留言给我</h3>
-              <form
-                className="mt-4 space-y-4"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  alert('感谢你的信息！我会尽快回复。');
-                  e.target.reset();
-                }}
-              >
+              {formStatus.message && (
+                <div
+                  className={`mt-4 rounded-lg px-4 py-3 text-sm ${
+                    formStatus.type === 'success'
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : 'bg-red-50 text-red-700 border border-red-200'
+                  }`}
+                >
+                  {formStatus.message}
+                </div>
+              )}
+              <form className="mt-4 space-y-4" onSubmit={handleFormSubmit}>
                 <label className="block space-y-2 text-sm">
                   <span className="text-slate-700">您的姓名</span>
                   <input
@@ -752,9 +816,10 @@ function App() {
                 </label>
                 <button
                   type="submit"
-                  className="w-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-3 text-white font-semibold shadow-lg shadow-indigo-200 transition hover:-translate-y-0.5 hover:shadow-xl"
+                  disabled={isSubmitting}
+                  className="w-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-3 text-white font-semibold shadow-lg shadow-indigo-200 transition hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                 >
-                  发送消息
+                  {isSubmitting ? '发送中...' : '发送消息'}
                 </button>
               </form>
             </div>
