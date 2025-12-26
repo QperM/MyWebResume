@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import emailjs from '@emailjs/browser';
 
 const navItems = [
@@ -24,9 +24,9 @@ const experiences = [
     title: '独立游戏开发 · 光蚀 Demo',
     subtitle: 'UNSW 课程项目',
     bullets: [
-      '模块化武器系统（换弹/后坐力/射击反馈）+ AI 行为树，实测可快速调优战斗节奏',
-      '双层碰撞胶囊体解决 AI 穿模，关卡流畅度显著提升，获 HD 评分 91.3/100',
-      '文档与视频交付：/sources/documents/光蚀项目文档.pdf',
+      '模块化武器与抛射物系统，配合AI行为树，实现战斗节奏分钟级调优。',
+      '创新采用双层碰撞胶囊体，彻底解决AI穿模问题，大幅提升关卡流畅度。',
+      '项目实测获HD综合评分91.3/100，兼具性能、玩法与工程成熟度。',
     ],
   },
   {
@@ -77,29 +77,28 @@ const skills = [
     description: '熟练使用蓝图系统实现 AI 行为树、动画状态机与关卡逻辑，通过双层碰撞胶囊体解决穿模问题，提升游戏流畅度。通过蓝图暴露参数以实现设计平衡与快速迭代。'
   },
   { 
-    name: 'Python / 数据处理', 
+    name: 'Python / 数据驱动开发', 
     value: 88,
-    description: '用 Python + Excel 自动化生成 200+ 份学习报告，具备数据分析与可视化能力，习惯用数据驱动迭代决策。'
+    description: '使用 Python + Excel 自动化生成 200+ 份报告，具备数据处理、分析与可视化能力，习惯用数据指导系统平衡。'
   },
   { 
-    name: '游戏与关卡设计', 
+    name: '游戏机制理解（玩家 → 工程转化）', 
     value: 84,
-    description: '从玩家视角反推设计逻辑，关注 TTK、战斗节奏与数值平衡，曾凭借对机制的精准把控在 CFM 排位中跻身前 0.01%。'
+    description: 'CFM 排位前 0.01% 玩家，长期从开发者视角拆解 TTK、输入响应、技能打断等手感要素，并能转化为可配置技术方案。'
   },
   { 
-    name: '计算机视觉 / ML', 
+    name: 'English & 工程素养', 
     value: 80,
-    description: 'UNSW 课程涵盖神经网络、计算机视觉与机器学习，具备理论基础与实践经验，能结合游戏场景应用相关技术。'
+    description: 'PTE 69，可流畅阅读英文技术文档；了解 Docker 基础部署，熟练使用 Git 进行版本控制与团队协作。'
   },
   { 
-    name: '前端（React）', 
+    name: '前端与工具开发（React）', 
     value: 78,
-    description: '参与 CNS 教育平台前端升级，使用 React + Strapi 实现交互地图与 Q&A 论坛，熟悉组件化开发与状态管理。'
+    description: '参与教育平台前端升级，使用 React + Strapi 实现交互地图与论坛，熟悉组件化开发，具备工具链拓展潜力。'
   },
 ];
 
 const otherSkills = [
-  '英语：CET-6 474 / PTE 69',
   '数据可视化与仪表盘',
   '3D 建模基础',
   '团队协作与项目推进',
@@ -119,8 +118,8 @@ const projects = [
     title: 'CNS 教育平台升级',
     desc: 'React + Strapi 前端交互与系统优化，文化敏感内容可视化呈现。',
     tags: ['React', 'Strapi', '系统优化', 'SVG 交互'],
-    image: '/sources/images/project3.jpg',
-    link: '#portfolio',
+    image: 'images/cns home.jpg',
+    link: 'documents/cns report.pdf',
   },
 ];
 
@@ -129,7 +128,7 @@ const games = [
     title: '穿越火线：枪战王者（CFM）',
     hours: '深度主游',
     type: 'FPS · PVP/PVE',
-    takeaways: '深度理解 TTK（Time-to-Kill）、射击反馈与战斗节奏，对多模式地图布局、数值平衡及武器手感高度敏感。曾凭借对关卡节奏与机制的精准把控，在竞技排位中跻身全服第83名（1200万日活，约前0.01%），具备从玩家视角反推设计逻辑的能力。',
+    takeaways: '深度理解 TTK（Time-to-Kill）、射击反馈与战斗节奏，对多模式地图布局、数值平衡及武器手感高度敏感。长期高段位玩家，深入研究移动射击手感、后坐力反馈、技能冷却与换弹节奏的耦合关系，在竞技排位中跻身全服第83名（1200万日活，约前0.01%），具备从玩家视角反推设计逻辑的能力。',
     image: '/images/games/cfm.jpg',
   },
   {
@@ -229,11 +228,57 @@ function App() {
   const [gameIndex, setGameIndex] = useState(() => Math.floor(games.length / 2));
   const [formStatus, setFormStatus] = useState({ type: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const hasSwiped = useRef(false);
 
   const handleScroll = (href) => {
     const el = document.querySelector(href);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setMenuOpen(false);
+  };
+
+  // 移动端滑动处理
+  const minSwipeDistance = 50; // 最小滑动距离
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+    hasSwiped.current = false;
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) {
+      hasSwiped.current = false;
+      return;
+    }
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      // 向左滑动，显示下一张
+      hasSwiped.current = true;
+      setGameIndex((idx) => (idx + 1) % games.length);
+    } else if (isRightSwipe) {
+      // 向右滑动，显示上一张
+      hasSwiped.current = true;
+      setGameIndex((idx) => (idx - 1 + games.length) % games.length);
+    } else {
+      hasSwiped.current = false;
+    }
+    
+    // 重置触摸状态
+    setTimeout(() => {
+      setTouchStart(null);
+      setTouchEnd(null);
+      hasSwiped.current = false;
+    }, 100);
   };
 
   const handleFormSubmit = async (e) => {
@@ -497,7 +542,7 @@ function App() {
               <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">玩家视角 · 体验拆解</span>
             </div>
             <div className="relative">
-              <div className="absolute -left-4 top-1/2 z-20 -translate-y-1/2">
+              <div className="absolute -left-4 top-1/2 z-20 hidden -translate-y-1/2 md:block">
                 <button
                   onClick={() => setGameIndex((idx) => (idx - 1 + games.length) % games.length)}
                   className="rounded-full bg-white/90 p-3 shadow-lg ring-1 ring-slate-200 hover:-translate-x-0.5 hover:bg-white transition"
@@ -508,7 +553,7 @@ function App() {
                   </svg>
                 </button>
               </div>
-              <div className="absolute -right-4 top-1/2 z-20 -translate-y-1/2">
+              <div className="absolute -right-4 top-1/2 z-20 hidden -translate-y-1/2 md:block">
                 <button
                   onClick={() => setGameIndex((idx) => (idx + 1) % games.length)}
                   className="rounded-full bg-white/90 p-3 shadow-lg ring-1 ring-slate-200 hover:translate-x-0.5 hover:bg-white transition"
@@ -519,7 +564,12 @@ function App() {
                   </svg>
                 </button>
               </div>
-              <div className="relative h-[480px] overflow-hidden py-8">
+              <div 
+                className="relative h-[480px] overflow-hidden py-8 touch-none md:touch-auto"
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+              >
                 {games.map((game, idx) => {
                   const delta = (idx - gameIndex + games.length) % games.length;
                   const position = delta === 0 ? 'center' : delta === 1 ? 'right' : delta === games.length - 1 ? 'left' : 'hidden';
@@ -534,9 +584,16 @@ function App() {
                   return (
                     <button
                       type="button"
-                      onClick={() => setGameIndex(idx)}
+                      onClick={(e) => {
+                        // 如果是滑动操作，不触发点击
+                        if (hasSwiped.current) {
+                          e.preventDefault();
+                          return;
+                        }
+                        setGameIndex(idx);
+                      }}
                       key={`${game.title}-${idx}`}
-                      className="group absolute left-1/2 top-4 h-[420px] w-[320px] -translate-x-1/2 overflow-hidden rounded-3xl border border-slate-100 bg-white/90 p-6 shadow-2xl transition duration-300 focus:outline-none"
+                      className="group absolute left-1/2 top-4 h-[420px] w-[320px] -translate-x-1/2 overflow-hidden rounded-3xl border border-slate-100 bg-white/90 p-6 shadow-2xl transition duration-300 focus:outline-none touch-none md:touch-auto"
                       style={{
                         transform: `translate(calc(-50% + ${translateX}px), 0) rotate(${rotate}deg) scale(${scale})`,
                         zIndex,
@@ -648,7 +705,7 @@ function App() {
           <div className="mx-auto max-w-6xl space-y-8">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold text-slate-900">作品集</h2>
-              <p className="text-sm text-slate-600">更关注可玩性验证与落地交付</p>
+              
             </div>
             <div className="grid gap-6 md:grid-cols-3">
               {projects.map((project) => (
@@ -699,7 +756,6 @@ function App() {
           <div className="mx-auto max-w-6xl space-y-10">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold text-slate-900">图库与视频</h2>
-              <p className="text-sm text-slate-600">即点即看，沉浸式体验</p>
             </div>
             <div className="grid gap-6 md:grid-cols-3">
               {mediaItems.map((item) => (
@@ -754,8 +810,7 @@ function App() {
             <div className="space-y-4">
               <h2 className="text-3xl font-bold text-slate-900">联系我</h2>
               <p className="text-slate-600">
-                想讨论关卡节奏、武器系统、AI 行为，或前端交互？发我邮件或微信式留言，
-                我会在 24 小时内回复。
+              如果您对关卡设计、模块化武器、AI行为或前端交互感兴趣，欢迎邮件联系，我会在24小时内回复。
               </p>
               <div className="grid gap-3 text-sm">
                 {contacts.map((item) => (
@@ -806,7 +861,7 @@ function App() {
                   />
                 </label>
                 <label className="block space-y-2 text-sm">
-                  <span className="text-slate-700">想聊的话题</span>
+                  <span className="text-slate-700">您的留言</span>
                   <textarea
                     name="message"
                     rows="4"
