@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import emailjs from '@emailjs/browser';
 
 const navItems = [
@@ -111,8 +111,8 @@ const projects = [
     title: '光蚀 - FPS Demo',
     desc: 'C++ + UE 实现武器系统、AI 行为树与战斗节奏验证，含视频与文档交付。',
     tags: ['C++', 'Unreal Engine', '蓝图', '3D 建模'],
-    image: '/sources/images/project1.jpg',
-    link: '/sources/documents/光蚀项目文档.pdf',
+    image: 'images/project1.png',
+    link: 'documents/光蚀项目文档.pdf',
   },
   {
     title: 'CNS 教育平台升级',
@@ -120,6 +120,13 @@ const projects = [
     tags: ['React', 'Strapi', '系统优化', 'SVG 交互'],
     image: 'images/cns home.jpg',
     link: 'documents/cns report.pdf',
+  },
+  {
+    title: 'Mosquito Killer',
+    desc: '基于 Kotlin 的安卓应用，核心利用 CameraX 调用相机，并通过自定义实时图像处理（色彩空间变换、动态阈值分析），识别并高亮画面中的微小深色静态物体，辅助用户寻找蚊子',
+    tags: ['Android','Kotlin','CameraX','图像处理','Material Design'],
+    image: 'images/mosquito killer.jpg',
+    link: 'https://github.com/QperM/MosquitoKiller',
   },
 ];
 
@@ -158,58 +165,45 @@ const games = [
 const mediaItems = [
   {
     type: 'video',
-    src: '/sources/videos/光蚀demo视频.mp4',
-    poster: '/sources/images/video1-poster.jpg',
+    poster: 'images/cover/cover1.png',
     title: '光蚀 Demo 演示',
-    desc: '前两关流程 + 核心机制回放',
-  },
-  {
-    type: 'video',
-    src: '/sources/videos/武器机制与效果展示.mp4',
-    poster: '/sources/images/video2-poster.jpg',
-    title: '武器机制与特效',
-    desc: '四把武器的机制差异与射击反馈',
+    desc: '《光蚀》Demo两分钟展示前两关流程，体验光能生存机制与武器系统。',
+    link: 'https://pan.baidu.com/s/1czqbzG9pYTs-RYMUT3xEcg?pwd=QWER',
   },
   {
     type: 'image',
-    src: '/sources/images/gallery1.jpg',
+    src: '/images/gallery/gallery1.png',
     title: '场景截图 1',
-    desc: '氛围与光影测试',
+    desc: '氛围与光影 世界陷入黑暗 主角自带光源',
   },
   {
     type: 'image',
-    src: '/sources/images/gallery2.jpg',
+    src: '/images/gallery/gallery2.png',
     title: '场景截图 2',
-    desc: '关卡节奏检查点',
+    desc: '关卡节奏检查点 传送阵与传送特效',
   },
   {
     type: 'image',
-    src: '/sources/images/gallery3.jpg',
+    src: '/images/gallery/gallery3.png',
     title: '场景截图 3',
-    desc: '战斗区域视距优化',
+    desc: '入口封印 初始会阻挡玩家进入关卡',
   },
   {
     type: 'image',
-    src: '/sources/images/gallery4.jpg',
+    src: '/images/gallery/gallery4.png',
     title: '场景截图 4',
-    desc: '环境叙事细节',
+    desc: '多层级UI',
   },
   {
     type: 'image',
-    src: '/sources/images/gallery5.jpg',
+    src: '/images/gallery/gallery5.png',
     title: '场景截图 5',
-    desc: '灯光与材质测试',
-  },
-  {
-    type: 'image',
-    src: '/sources/images/gallery6.jpg',
-    title: '场景截图 6',
-    desc: '视觉引导实验',
+    desc: '多样化武器 不同的机制与手感',
   },
 ];
 
 const contacts = [
-  { label: '邮箱', value: 'junyu.ma.resume@outlook.com', href: 'mailto:junyu.ma.resume@outlook.com' },
+  { label: '邮箱', value: 'junyu.ma.resume@gmail.com', href: 'mailto:junyu.ma.resume@gmail.com' },
   { label: '电话', value: '15535578110', href: 'tel:15535578110' },
   { label: '籍贯', value: '山西长治' },
   { label: '学历', value: '硕士研究生（UNSW）' },
@@ -327,7 +321,7 @@ function App() {
 
     try {
       const response = await emailjs.send(
-        process.env.REACT_APP_EMAILJS_SERVICE_ID || 'service_c0s6wjo',
+        process.env.REACT_APP_EMAILJS_SERVICE_ID || 'service_uifo9q6',
         process.env.REACT_APP_EMAILJS_TEMPLATE_ID || 'template_stan71c',
         templateParams,
         process.env.REACT_APP_EMAILJS_PUBLIC_KEY || '11oS_enHDgk3u1Rrc'
@@ -345,17 +339,13 @@ function App() {
       console.error('错误消息:', error.text);
       setFormStatus({ 
         type: 'error', 
-        message: `发送失败：${error.text || error.message}。请直接发邮件至 junyu.ma.resume@outlook.com` 
+        message: `发送失败：${error.text || error.message}。请直接发邮件至 junyu.ma.resume@gmail.com` 
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const skillLevels = useMemo(
-    () => skills.map((skill) => ({ ...skill, width: `${skill.value}%` })),
-    []
-  );
 
   return (
     <div className="text-slate-900 bg-transparent">
@@ -795,17 +785,33 @@ function App() {
                   className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white/80 shadow-lg transition hover:-translate-y-1 hover:shadow-xl"
                 >
                   {item.type === 'video' ? (
-                    <div className="relative">
-                      <video
-                        controls
-                        poster={item.poster}
-                        className="h-52 w-full object-cover"
-                      >
-                        <source src={item.src} type="video/mp4" />
-                        您的浏览器不支持视频播放。
-                      </video>
+                    <a
+                      href={item.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative block h-52 w-full overflow-hidden"
+                    >
+                      <img
+                        src={item.poster}
+                        alt={item.title}
+                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      />
                       <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-slate-900/50 to-transparent" />
-                    </div>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="rounded-full bg-white/90 p-4 shadow-lg transition group-hover:scale-110">
+                          <svg className="h-8 w-8 text-slate-900" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                      {item.linkText && (
+                        <div className="absolute bottom-2 left-2 right-2 text-center">
+                          <span className="inline-block rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
+                            {item.linkText}
+                          </span>
+                        </div>
+                      )}
+                    </a>
                   ) : (
                     <button
                       type="button"
